@@ -1,29 +1,34 @@
 import { HttpService } from '@nestjs/axios/dist';
-import { Controller, Get, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Chess } from 'chess.js';
 import { firstValueFrom } from 'rxjs';
+import { MoveDto } from './move.dto';
 
 @Controller('board')
 export class BoardController {
-    private board = [];
+    private chess: Chess;
 
-    constructor(private readonly httpService: HttpService) {}
-
-    @Get('/')
-    getBoard(@Req() request: Request, @Res() res) {
-        const iaMove = this.getIaMove();
-
-        console.log(iaMove);
-
-        return res.data(bestMove);
-
-        return res.json([
-            ['e4', 'e5'],
-            ['Cf3', 'Cc6'],
-        ]);
+    constructor(private readonly httpService: HttpService) {
+        this.chess = new Chess();
     }
 
-    async getIaMove() {
-        const fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR%20w%20KQkq%20-%200%201';
+    @Get('/')
+    getBoard() {
+        return this.chess.board();
+    }
+
+    @Post('/new-game')
+    newGame() {
+        this.chess.reset();
+    }
+
+    @Post('/move')
+    async move(@Body() moveDto: MoveDto) {
+        this.chess.move(moveDto.move);
+        this.chess.move(await this.getIaMove(this.chess.fen()));
+    }
+
+    async getIaMove(fen: string): Promise<string> {
         const url = 'https://www.chessdb.cn/cdb.php?action=querybest&board=' + fen + '&json=1';
 
         const { data } = await firstValueFrom(this.httpService.get(url));
