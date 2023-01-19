@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios/dist';
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { Chess, Square } from '../../node_modules/chess.js/dist/chess';
 import { MoveDto } from './move.dto';
@@ -52,6 +52,12 @@ export class BoardController {
         }
 
         console.log(this.chess.ascii());
+    }
+
+    @Get('/can-move')
+    allowedMoves(@Query() query): any[] {
+        console.log(query.position);
+        return this.chess.moves({ square: query.position as Square });
     }
 
     async getIaMove(fen: string): Promise<string> {
